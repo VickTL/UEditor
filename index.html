@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UE Creative</title>
+
+    <link rel="stylesheet" href="CSS/styles.css">
+    <script src="JS/lib.js"></script>
+    <script src="JS/canvas.js"></script>
+</head>
+<body>
+    <div class="controls" id="left">
+        <div class="controlContainer">
+            <div class="controlTitle"><h3>Canvas</h3></div>
+            <div class="controlInputs">
+                <p>Presets social</p>
+                <input type="button" value="V" class="button">
+                <input type="button" value="H" class="button">
+                <input type="button" value="C" class="button">
+                
+                <p>Custom Size</p>
+                <input type="number" name="canvasX" id="inCanvasX" class="numberInput">
+                x
+                <input type="number" name="canvasY" id="inCanvasY" class="numberInput">
+                
+            </div>
+        </div>
+
+        <div class="controlContainer">
+            <div class="controlTitle"><h3>Image</h3></div>
+            <div class="controlInputs">
+                <p>Upload Image</p>
+                <input type="file" name="Image" id="inImage">
+
+                <p>Zoom</p>
+                <input type="range" name="imageZoom" id="slImageZoom" class="slider">
+                
+                <p>Position</p>
+                <input type="number" name="imageX" id="inImageX" class="numberInput">
+                x
+                <input type="number" name="imageY" id="inImageY" class="numberInput">
+                
+            </div>
+        </div>
+
+        <div class="controlContainer">
+            <div class="controlTitle"><h3>Grid</h3></div>
+            <div class="controlInputs">
+                <p>Grid Density</p>
+                <input type="range" name="GridChance" id="slGridChance" class="slider">
+                <p>Magnet force</p>
+                <input type="range" name="DistanceChance" id="slDistanceChance" class="slider">
+            </div>
+        </div>
+    </div>
+    <div id="canvasContainer">
+        <canvas id="canvas" width="1080" height="1920"></canvas>
+    </div>
+    <div class="controls" id="right">
+        Hallo
+    </div>
+</body>
+</html>
