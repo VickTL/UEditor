@@ -29,11 +29,30 @@ window.onload = function() {
 
     document.getElementById("slGridChance").oninput = function() { gridChance = mapRange(this.value, 0, 100, 0, 1, true); createGrid(); }
     document.getElementById("slDistanceChance").oninput = function() { distanceChance = mapRange(this.value, 0, 100, 0, 10, true); createGrid();}
-    document.getElementById("inImage").onchange = function() { 
-        background = document.getElementById("inImage").value;
-        isBackground = true;
-        createGrid();
-    }
+
+    document.getElementById("inImage").onchange = function() {
+        var file = this.files[0];
+        var reader = new FileReader();
+
+        reader.onloadend = function() {
+            console.log('RESULT', reader.result);
+            //var canvas = document.getElementById("myCanvas");
+            //var ctx = canvas.getContext("2d");
+
+            background = new Image();
+            
+            background.onload = function() { 
+                isBackground = true;
+                createGrid(); 
+            }
+            background.src = reader.result;
+        }
+
+        reader.readAsDataURL(file);
+
+        
+    }        
+
 
     class InterestPoint {
         constructor(x, y) {
@@ -84,12 +103,8 @@ window.onload = function() {
     function createGrid() {
         if(!isBackground) checkerboard();
         else {
-            // Convert background to image
-            var img = new Image();
-            img.src = background;
-            img.onload = function() {
-                ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
-            }
+
+            ctx.drawImage(background, 0, 0, canvasWidth, canvasHeight);
         }
 
         for(var i = 0; i < countX; i++) {
