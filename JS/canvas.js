@@ -6,30 +6,66 @@ window.onload = function() {
     // Get the 2D context of the canvas
     var ctx = canvas.getContext("2d");
 
-    // Draw a rectangle on the canvas
-    var canvasWidth = canvas.width;
-    var canvasHeight = canvas.height;
 
-    var unit = canvasWidth / 18;
-    var logoSize = unit * 1.5;
-    var gridSize = unit * 2;
-    var margin = unit;
 
-    var countX = (canvasWidth-margin*2) / gridSize;
-    var countY = (canvasHeight-margin*2) / gridSize;
+    var gridColor = "rgb(255,50,40)";
+    var gridThick = 3;
+    
+    var canvasHeight, canvasWidth, unit, logoSize, gridSize, margin, countX, countY;
 
     var counter = 0;
 
     var background;
     var isBackground = false;
+    var imageZoom = 1;
+    var imageX = 0;
+    var imageY = 0;
 
-    // Sliders
+    var grid = [];
+
+
+
+
+
+    // INPUTS
     var gridChance = 0.1;
     var distanceChance = 9;
+
+    document.getElementById("presetV").onclick = function() { 
+        canvas.width = 1080; 
+        canvas.height = 1920;
+        canvasWidth = canvas.width;
+        canvasHeight = canvas.height; 
+        createGrid();
+    }
+
+    document.getElementById("presetH").onclick = function() { 
+        canvas.width = 1920; 
+        canvas.height = 1080;
+        canvasWidth = canvas.width;
+        canvasHeight = canvas.height; 
+        createGrid();
+    }
+
+    document.getElementById("presetC").onclick = function() { 
+        canvas.width = 1080; 
+        canvas.height = 1080;
+        canvasWidth = canvas.width;
+        canvasHeight = canvas.height; 
+        createGrid();
+    }
+  
+    document.getElementById("inCanvasX").oninput = function() { canvas.width = this.value; canvasWidth = canvas.width; createGrid();}
+    document.getElementById("inCanvasY").oninput = function() { canvas.height = this.value; canvasHeight = canvas.height; createGrid();}
+
+    document.getElementById("slImageZoom").oninput = function() { imageZoom = mapRange(this.value, 0, 100, 0, 10, true); drawGrid();}
+    document.getElementById("inImageX").oninput = function() { imageX = this.value; drawGrid();}
+    document.getElementById("inImageY").oninput = function() { imageY = this.value; drawGrid();}
 
     document.getElementById("slGridChance").oninput = function() { gridChance = mapRange(this.value, 0, 100, 0, 1, true); createGrid(); }
     document.getElementById("slDistanceChance").oninput = function() { distanceChance = mapRange(this.value, 0, 100, 0, 10, true); createGrid();}
 
+    // Carga imagen
     document.getElementById("inImage").onchange = function() {
         var file = this.files[0];
         var reader = new FileReader();
@@ -43,17 +79,26 @@ window.onload = function() {
             
             background.onload = function() { 
                 isBackground = true;
-                createGrid(); 
+                drawGrid(); 
             }
             background.src = reader.result;
         }
 
         reader.readAsDataURL(file);
-
-        
-    }        
+    }   
 
 
+
+
+
+    // CLASES    
+    class Point {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+        }
+    }
+    
     class InterestPoint {
         constructor(x, y) {
             this.x = x;
@@ -73,16 +118,65 @@ window.onload = function() {
             return mappedDistance;
         }
     }
-    
-    class Point {
-        constructor(x, y) {
-            this.x = x;
-            this.y = y;
-        }
-    }
 
+    class Square {
+        constructor(x, y) {
+            this.x = margin + x * gridSize;
+            this.y = margin + y * gridSize;
+
+            this.visible = true;
+
+            this.centerX = this.x + (this.x+gridSize) / 2;
+            this.centerY = this.y + (this.y+gridSize) / 2;
+            this.center = new Point(this.centerX, this.centerY);
+        }
+
+        draw() {
+            if(this.visible) {
+                ctx.translate(this.x, this.y);
+                ctx.strokeStyle = gridColor;
+                ctx.lineWidth = gridThick;
+    
+                ctx.strokeRect(0, 0, gridSize, gridSize);
+                ctx.translate(-this.x, -this.y);
+            }
+        }
+
+        heatmap() {
+            if(this.visible) {
+                ctx.translate(this.x, this.y);
+                ctx.fillStyle = "rgba(255,50,40,"+intP.distanceTo(this.center)+")";
+                
+                ctx.fillRect(0, 0, gridSize, gridSize);
+                ctx.translate(-this.x, -this.y);
+            }
+        }
+    }     
+
+
+
+
+
+    
     var intP = new InterestPoint (0, 0);
     createGrid();
+
+    function initGrid() {
+        canvasWidth = canvas.width;
+        canvasHeight = canvas.height;
+
+        if(canvasHeight > canvasWidth) {
+            unit = canvasWidth / 18;
+        }
+        else unit = canvasHeight / 18;
+
+        logoSize = unit * 1.5;
+        gridSize = unit * 2;
+        margin = unit;
+
+        countX = (canvasWidth-margin*2) / gridSize;
+        countY = (canvasHeight-margin*2) / gridSize;
+    }
 
     function checkerboard() {
         // Create a checkerboard pattern background with each cell of size unit
@@ -99,19 +193,44 @@ window.onload = function() {
         }
     }
    
-
-    function createGrid() {
+    function drawBackground() {
         if(!isBackground) checkerboard();
         else {
+            ctx.drawImage(background, imageX, imageY, background.width*imageZoom, background.height*imageZoom);
+        }
+    }
 
-            ctx.drawImage(background, 0, 0, canvasWidth, canvasHeight);
+    function createGrid() {
+        initGrid();
+        drawBackground();
+
+        // Genera toda la grid completa
+        for(var i = 0; i < countX; i++) {
+            for(var j = 0; j < countY; j++) {
+                grid[i+j*countX] = new Square(i,j);
+            }
         }
 
+        console.table(grid);
+
+        // Togglea la visibilidad según condiciones
+        for(var i = 0; i < countX; i++) {
+            for(var j = 0; j < countY; j++) {
+                if(Math.random()*(-intP.distanceTo(grid[i+j*countX])) < gridChance) {
+                    grid[i+j*countX].visible = true;
+                }
+                else grid[i+j*countX].visible = false;
+            }
+        }
+
+        drawGrid();
+
+        /*
         for(var i = 0; i < countX; i++) {
             for(var j = 0; j < countY; j++) {
                 ctx.translate(margin + i * gridSize, margin + j * gridSize);
-                ctx.strokeStyle = "rgb(255,50,40)";
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = gridColor;
+                ctx.lineWidth = gridThick;
     
                 var p = new Point(margin + i * gridSize, margin + j * gridSize);
     
@@ -124,6 +243,18 @@ window.onload = function() {
                 ctx.translate(-margin - i * gridSize, -margin - j * gridSize);
             }
         }
+        */
+    }
+
+    function drawGrid() {
+        drawBackground();
+
+        for(var i = 0; i < countX; i++) {
+            for(var j = 0; j < countY; j++) {
+                grid[i+j*countX].draw();
+                //grid[i+j*countX].heatmap();
+            }
+        }
     }
 
     canvas.addEventListener('click', function (evt) {
@@ -133,4 +264,5 @@ window.onload = function() {
         createGrid();
         console.log(message);
     }, false);    
+
 }
